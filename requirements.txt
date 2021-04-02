@@ -2,3 +2,4 @@ Pillow
 pywin32
 numpy
 pyocr
+pyperclip
