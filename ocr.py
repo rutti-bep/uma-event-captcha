@@ -2,16 +2,15 @@ import json
 import os
 from collections import OrderedDict
 
+import settings as st
+
 import numpy as np
 import pyocr
 import pyocr.builders
 import pyperclip
-#import win32gui
+if not st.DEBUG_IMAGE_PATH:
+    import win32gui
 from PIL import Image, ImageEnhance, ImageGrab, ImageOps
-
-import settings as st
-
-
 
 def tesseract_init():
     # 1.インストール済みのTesseractのパスを通す
