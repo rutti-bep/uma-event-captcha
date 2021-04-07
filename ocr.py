@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import json
 import os
 from collections import OrderedDict
@@ -6,10 +8,10 @@ import numpy as np
 import pyocr
 import pyocr.builders
 import pyperclip
-import win32gui
-from PIL import ImageEnhance, ImageGrab, ImageOps
+#import win32gui
+from PIL import Image, ImageEnhance, ImageGrab, ImageOps
 
-import settings.py as st
+import settings as st
 
 
 
@@ -68,7 +70,6 @@ def is_event_display():
 
 def get_event():
     tesseract = tesseract_init()
-    rect = get_window_position()
 
     #TODO 選択肢が出ているかどうかを判定するループ
 
@@ -83,7 +84,12 @@ def get_event():
                 break
     """
 
-    img = get_event_title_image(rect)
+    img = None
+    if not st.DEBUG_IMAGE_PATH:
+        rect = get_window_position()
+        img = get_event_title_image(rect)
+    else:
+        img = Image.open(st.DEBUG_IMAGE_PATH)
     img = enhance_image(img)
 
     result = OCR(tesseract, img)
