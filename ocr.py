@@ -22,26 +22,25 @@ def tesseract_init():
     return tools[0]
 
 
-def get_window_position():
+def get_window_image():
     handle = win32gui.FindWindow(None, st.TARGET_NAME)
     rect = win32gui.GetWindowRect(handle)
-    return rect
+    ImageGrab.grab(rect)
+    return image
 
 
 #TODO get_event_title_image, get_event_choices_image の中でenhanceまでやる？
 #TODO get_event_choices_image の呼び出し回数に応じて上に移動するか判断
 
-def get_event_title_image(rect):
-    width = rect[2]-rect[0]
-    height = rect[3]-rect[1]
+def crop_event_title_image(img):
+    width,height = img.size
 
-    left = rect[0] + width*0.16
-    right = rect[2] - width*0.35
-    top = rect[1] + height*0.21
-    bottom = rect[3] - height*0.76
+    left = width*0.16
+    right = width*0.7
+    top = height*0.21
+    bottom = height*0.24
 
-    new_rect = [left,top,right,bottom]
-    return ImageGrab.grab(new_rect)
+    return img.crop((left,top,right,bottom))
 
 
 def enhance_image(img):
@@ -83,10 +82,10 @@ def get_event():
 
     img = None
     if not st.DEBUG_IMAGE_PATH:
-        rect = get_window_position()
-        img = get_event_title_image(rect)
+        img = get_window_image()
     else:
         img = Image.open(st.DEBUG_IMAGE_PATH)
+    img = crop_event_title_image(img)
     img = enhance_image(img)
 
     result = OCR(tesseract, img)
