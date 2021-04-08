@@ -1,5 +1,5 @@
-import ocr.py
-import search.py
+import ocr
+import search
 
 
 

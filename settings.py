@@ -1,2 +1,3 @@
 TARGET_NAME = 'umamusume'
-TESSERACT_PATH = "C:\\Program Files\\Tesseract-OCR"
+TESSERACT_PATH = "/usr/local/Cellar/tesseract/"
+DEBUG_IMAGE_PATH = "test.png"
