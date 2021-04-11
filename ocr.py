@@ -1,6 +1,6 @@
-import json
 import os
 from collections import OrderedDict
+import time
 
 import settings as st
 
@@ -94,6 +94,7 @@ def get_event():
             base_img = get_window_image()
             ans = count_event_display(base_img)
             if ans==0:
+                time.sleep(1);
                 continue
             else:
                 break
