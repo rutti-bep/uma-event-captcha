@@ -101,7 +101,7 @@ def crop_choices_images(img):
     w, h = fitted_choices_template.shape[::-1]
     #match img,template
     res = cv2.matchTemplate(img_th,fitted_choices_template,cv2.TM_CCOEFF_NORMED)
-    threshold = 0.6
+    threshold = 0.8
     loc = np.where( res >= threshold)
     #nms
     for r in res:
@@ -114,7 +114,7 @@ def crop_choices_images(img):
     for pt in zip(*loc[::-1]):
         boxes.append([int(pt[0]), int(pt[1]), int(w), int(h)])
 
-    indexes = cv2.dnn.NMSBoxes(boxes,scores,0.5,0.4)
+    indexes = cv2.dnn.NMSBoxes(boxes,scores,0.6,0.5)
     nms_result = [[],[]]
 
     for i in indexes:
