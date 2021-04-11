@@ -63,6 +63,15 @@ def enhance_image(img):
     img = ImageEnhance.Sharpness(img).enhance(2)
     return img
 
+def enchance_choices_image(img):
+    #ネガポジ反転
+    img = ImageOps.invert(img)
+    #img = ImageEnhance.Brightness(img).enhance(2)
+    img = ImageEnhance.Sharpness(img).enhance(1)
+
+    img.save('debug.png')
+    return img
+
 
 def OCR(tesseract, img):
     #TODO builderをinitで作成し渡す
@@ -71,15 +80,16 @@ def OCR(tesseract, img):
 
 
 def crop_choices_images(img):
+    #enhance img
     choices_img = crop_choices_area(img)
     formated_choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(formated_choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
     img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
-
-    choices_template = cv2.imread('choices_frame.png',0)
+    #read template
+    choices_template = cv2.imread('choices_template.png',0)
     w, h = choices_template.shape[::-1]
-
+    #resize template
     aspect = w / h
     if choices_img.width / choices_img.height >= aspect:
         nh = choices_img.height
@@ -88,25 +98,18 @@ def crop_choices_images(img):
         nw = choices_img.width
         nh = round(nw / aspect)
     fitted_choices_template = cv2.resize(choices_template, dsize=(nw, nh))
-
+    #match img,template
     res = cv2.matchTemplate(img_th,fitted_choices_template,cv2.TM_CCOEFF_NORMED)
-    threshold = 0.6
-    loc = np.where( res >= threshold)
-    for pt in zip(*loc[::-1]):
-        cv2.rectangle(formated_choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
-    print(loc)
-    #choices_template,cm_hierarchy = cv2.findContours(cv2.threshold(choices_match_img, 127, 255,0)[1],2,1)
-    #contours = list(filter(lambda x: cv2.matchShapes(x,choices_match_contours[0],cv2.CONTOURS_MATCH_I2,0.0) < 0.5, contours))
-
-
-    #debug_img_th = cv2.threshold(img_blur, 0,255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
-    #cv2.imwrite('choices_frame.png',cv2.drawContours(debug_img_th, contours, -1, (0,255,0), 3))
-
+    threshold = 0.9
+    locy,locx = np.where( res >= threshold)
+    #cut matchd img area
+    choices_images = []
+    for pt in zip(locx,locy):
+        cv2.rectangle(formated_choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 1)
+        choices_images.append(Image.fromarray(img_th[pt[1]:pt[1]+h,pt[0]:pt[0]+w]))
 
     cv2.imshow('debug',cv2.cvtColor(formated_choices_img, cv2.COLOR_RGB2BGR))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    return loc
+    return choices_images
 
 
 def get_event():
@@ -125,6 +128,9 @@ def get_event():
     else:
         base_img = Image.open(st.DEBUG_IMAGE_PATH)
         ans = crop_choices_images(base_img)
+        for choice in ans:
+            result = OCR(tesseract, enchance_choices_image( choice))
+            print(result)
 
     img = crop_event_title_image(base_img)
     img = enhance_image(img)
@@ -136,6 +142,8 @@ def get_event():
     #test code
     print(result)
     pyperclip.copy(result.split(' ',1)[0])
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     #TODO イベント名と選択肢を含む配列をリターンする
     return result.split(' ',1)[0]
