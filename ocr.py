@@ -46,10 +46,10 @@ def crop_event_title_image(img):
 def crop_event_choices_img(img):
     width,height = img.size
 
-    left = width*0.1
-    right = width*0.9
-    top = height*0.4
-    bottom = height*0.8
+    left = width*0.03
+    right = width*0.97
+    top = height*0.3
+    bottom = height*0.7
 
     return img.crop((left,top,right,bottom))
 
@@ -72,18 +72,14 @@ def OCR(tesseract, img):
 #関数名はよしなに
 def is_event_display(img):
     choices_img = crop_event_choices_img(img)
-    #choices_img = choices_img.convert('L')
     choices_img = np.array(choices_img, dtype=np.uint8)
-    print(img)
-    print(choices_img)
     img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
-    img_blur = cv2.GaussianBlur(img_gray, (11, 11), 0) 
-    ret1, th1 = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY_INV)
-    th2 = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 3)
-    im_th = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
-    contours = cv2.findContours(im_th, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
-    print(contours)
-    cv2.imshow('pie',th2)
+    img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
+    img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
+    contours,hierarchy = cv2.findContours(cv2.bitwise_not(img_th), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    img = cv2.drawContours(cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR), contours, -1, (0,255,0), 3)
+
+    cv2.imshow('debug',img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     return 1;
