@@ -98,13 +98,33 @@ def crop_choices_images(img):
         nw = choices_img.width
         nh = round(nw / aspect)
     fitted_choices_template = cv2.resize(choices_template, dsize=(nw, nh))
+    w, h = fitted_choices_template.shape[::-1]
     #match img,template
     res = cv2.matchTemplate(img_th,fitted_choices_template,cv2.TM_CCOEFF_NORMED)
-    threshold = 0.9
-    locy,locx = np.where( res >= threshold)
+    threshold = 0.6
+    loc = np.where( res >= threshold)
+    #nms
+    for r in res:
+        if r >= threshold:
+            score = r
+
+    scores = list(map(lambda s:float(s),res[loc]))
+    boxes = []
+
+    for pt in zip(*loc[::-1]):
+        boxes.append([int(pt[0]), int(pt[1]), int(w), int(h)])
+
+    indexes = cv2.dnn.NMSBoxes(boxes,scores,0.5,0.4)
+    nms_result = [[],[]]
+
+    for i in indexes:
+        print(i[0])
+        nms_result[0].append(loc[0][i[0]]);
+        nms_result[1].append(loc[1][i[0]]);
+
     #cut matchd img area
     choices_images = []
-    for pt in zip(locx,locy):
+    for pt in zip(*nms_result[::-1]):
         cv2.rectangle(formated_choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 1)
         choices_images.append(Image.fromarray(img_th[pt[1]:pt[1]+h,pt[0]:pt[0]+w]))
 
