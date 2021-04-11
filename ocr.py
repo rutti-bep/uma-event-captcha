@@ -72,7 +72,7 @@ def OCR(tesseract, img):
 
 def count_event_display(img):
     choices_img = crop_event_choices_img(img)
-    #choices_img_area = choices_img.width*choices_img.height
+    choices_img_width,choices_img_height = choices_img.size
     choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
@@ -81,7 +81,16 @@ def count_event_display(img):
     choices_template = cv2.imread('choices_frame.png',0)
     w, h = choices_template.shape[::-1]
 
-    res = cv2.matchTemplate(img_th,choices_template,cv2.TM_CCOEFF_NORMED)
+    aspect = w / h
+    if choices_img_width / choices_img_height >= aspect:
+        nh = choices_img_height
+        nw = round(nh * aspect)
+    else:
+        nw = choices_img_width
+        nh = round(nw / aspect)
+    fitted_choices_template = cv2.resize(choices_template, dsize=(nw, nh))
+
+    res = cv2.matchTemplate(img_th,fitted_choices_template,cv2.TM_CCOEFF_NORMED)
     threshold = 0.6
     loc = np.where( res >= threshold)
     for pt in zip(*loc[::-1]):
