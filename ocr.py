@@ -26,7 +26,7 @@ def tesseract_init():
 def get_window_image():
     handle = win32gui.FindWindow(None, st.TARGET_NAME)
     rect = win32gui.GetWindowRect(handle)
-    ImageGrab.grab(rect)
+    image = ImageGrab.grab(rect)
     return image
 
 
