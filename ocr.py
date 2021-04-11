@@ -72,29 +72,33 @@ def OCR(tesseract, img):
 
 def count_event_display(img):
     choices_img = crop_event_choices_img(img)
-    choices_img_area = choices_img.width*choices_img.height
+    #choices_img_area = choices_img.width*choices_img.height
     choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
     img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
-    contours,hierarchy = cv2.findContours(cv2.bitwise_not(img_th), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-    contours = list(filter(lambda x: cv2.contourArea(x) >= choices_img_area*0.1, contours))
-    contours = list(filter(lambda x: cv2.contourArea(x) <= choices_img_area*0.3, contours))
+    choices_template = cv2.imread('choices_frame.png',0)
+    w, h = choices_template.shape[::-1]
 
-    choices_match_img = cv2.imread('choices_frame.png',0)
-    choices_match_contours,cm_hierarchy = cv2.findContours(cv2.threshold(choices_match_img, 127, 255,0)[1],2,1)
-    contours = list(filter(lambda x: cv2.matchShapes(x,choices_match_contours[0],cv2.CONTOURS_MATCH_I2,0.0) < 0.5, contours))
+    res = cv2.matchTemplate(img_th,choices_template,cv2.TM_CCOEFF_NORMED)
+    threshold = 0.6
+    loc = np.where( res >= threshold)
+    for pt in zip(*loc[::-1]):
+        cv2.rectangle(choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
+    print(loc)
+    #choices_template,cm_hierarchy = cv2.findContours(cv2.threshold(choices_match_img, 127, 255,0)[1],2,1)
+    #contours = list(filter(lambda x: cv2.matchShapes(x,choices_match_contours[0],cv2.CONTOURS_MATCH_I2,0.0) < 0.5, contours))
+
 
     #debug_img_th = cv2.threshold(img_blur, 0,255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
     #cv2.imwrite('choices_frame.png',cv2.drawContours(debug_img_th, contours, -1, (0,255,0), 3))
 
 
-    img = cv2.drawContours(cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR), contours, -1, (0,255,0), 3)
-    cv2.imshow('debug',img)
+    cv2.imshow('debug',cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return len(contours)
+    return len(loc)
 
 
 def get_event():
