@@ -43,6 +43,15 @@ def crop_event_title_image(img):
 
     return img.crop((left,top,right,bottom))
 
+def crop_event_choices_img(img):
+    width,height = img.size
+
+    left = width*0.1
+    right = width*0.9
+    top = height*0.4
+    bottom = height*0.8
+
+    return img.crop((left,top,right,bottom))
 
 def enhance_image(img):
     #グレースケール
@@ -61,18 +70,41 @@ def OCR(tesseract, img):
     return tesseract.image_to_string(img, lang="jpn", builder=builder)
 
 #関数名はよしなに
-def is_event_display():
-    pass 
+def is_event_display(img):
+    choices_img = crop_event_choices_img(img)
+    #choices_img = choices_img.convert('L')
+    choices_img = np.array(choices_img, dtype=np.uint8)
+    print(img)
+    print(choices_img)
+    img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
+    img_blur = cv2.GaussianBlur(img_gray, (11, 11), 0) 
+    ret1, th1 = cv2.threshold(img_gray, 127, 255, cv2.THRESH_BINARY_INV)
+    th2 = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, 11, 3)
+    im_th = cv2.threshold(img_gray, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
+    contours = cv2.findContours(im_th, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)[1]
+    print(contours)
+    cv2.imshow('pie',th2)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    return 1;
 
 
 def get_event():
     tesseract = tesseract_init()
 
-    #TODO 選択肢が出ているかどうかを判定するループ
+    base_img = None
+    if not st.DEBUG_IMAGE_PATH:
+        base_img = get_window_image()
+    else:
+        base_img = Image.open(st.DEBUG_IMAGE_PATH)
 
+
+    #TODO 選択肢が出ているかどうかを判定するループ
     """
     while(1):
-        ans = is_event_display()
+    """
+    ans = is_event_display(base_img)
+    """
         if ans == 0:
             continue
         else:
@@ -81,18 +113,10 @@ def get_event():
                 break
     """
 
-    img = None
-    if not st.DEBUG_IMAGE_PATH:
-        img = get_window_image()
-    else:
-        img = Image.open(st.DEBUG_IMAGE_PATH)
-    img = crop_event_title_image(img)
+    img = crop_event_title_image(base_img)
     img = enhance_image(img)
 
     
-    cv2.imshow('pie',np.asarray(img))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     result = OCR(tesseract, img)
 
