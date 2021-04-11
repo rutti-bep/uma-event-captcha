@@ -73,8 +73,8 @@ def OCR(tesseract, img):
 def count_event_display(img):
     choices_img = crop_event_choices_img(img)
     choices_img_width,choices_img_height = choices_img.size
-    choices_img = np.array(choices_img, dtype=np.uint8)
-    img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
+    formated_choices_img = np.array(choices_img, dtype=np.uint8)
+    img_gray = cv2.cvtColor(formated_choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
     img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
 
@@ -82,11 +82,11 @@ def count_event_display(img):
     w, h = choices_template.shape[::-1]
 
     aspect = w / h
-    if choices_img_width / choices_img_height >= aspect:
-        nh = choices_img_height
+    if choices_img.width / choices_img.height >= aspect:
+        nh = choices_img.height
         nw = round(nh * aspect)
     else:
-        nw = choices_img_width
+        nw = choices_img.width
         nh = round(nw / aspect)
     fitted_choices_template = cv2.resize(choices_template, dsize=(nw, nh))
 
@@ -94,7 +94,7 @@ def count_event_display(img):
     threshold = 0.6
     loc = np.where( res >= threshold)
     for pt in zip(*loc[::-1]):
-        cv2.rectangle(choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
+        cv2.rectangle(formated_choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 2)
     print(loc)
     #choices_template,cm_hierarchy = cv2.findContours(cv2.threshold(choices_match_img, 127, 255,0)[1],2,1)
     #contours = list(filter(lambda x: cv2.matchShapes(x,choices_match_contours[0],cv2.CONTOURS_MATCH_I2,0.0) < 0.5, contours))
@@ -104,7 +104,7 @@ def count_event_display(img):
     #cv2.imwrite('choices_frame.png',cv2.drawContours(debug_img_th, contours, -1, (0,255,0), 3))
 
 
-    cv2.imshow('debug',cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR))
+    cv2.imshow('debug',cv2.cvtColor(formated_choices_img, cv2.COLOR_RGB2BGR))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     return len(loc)
