@@ -69,20 +69,20 @@ def OCR(tesseract, img):
     builder = pyocr.builders.TextBuilder()
     return tesseract.image_to_string(img, lang="jpn", builder=builder)
 
-#関数名はよしなに
-def is_event_display(img):
+
+def count_event_display(img):
     choices_img = crop_event_choices_img(img)
     choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
     img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
     contours,hierarchy = cv2.findContours(cv2.bitwise_not(img_th), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    img = cv2.drawContours(cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR), contours, -1, (0,255,0), 3)
 
+    img = cv2.drawContours(cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR), contours, -1, (0,255,0), 3)
     cv2.imshow('debug',img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return 1;
+    return len(contours)
 
 
 def get_event():
@@ -90,24 +90,16 @@ def get_event():
 
     base_img = None
     if not st.DEBUG_IMAGE_PATH:
-        base_img = get_window_image()
+        while(1):
+            base_img = get_window_image()
+            ans = count_event_display(base_img)
+            if ans==0:
+                continue
+            else:
+                break
     else:
         base_img = Image.open(st.DEBUG_IMAGE_PATH)
-
-
-    #TODO 選択肢が出ているかどうかを判定するループ
-    """
-    while(1):
-    """
-    ans = is_event_display(base_img)
-    """
-        if ans == 0:
-            continue
-        else:
-            if ans == 2:
-                #OCR
-                break
-    """
+        ans = count_event_display(base_img)
 
     img = crop_event_title_image(base_img)
     img = enhance_image(img)
