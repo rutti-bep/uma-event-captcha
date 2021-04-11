@@ -3,3 +3,4 @@ pywin32
 numpy
 pyocr
 pyperclip
+opencv-python
