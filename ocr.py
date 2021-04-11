@@ -11,7 +11,6 @@ import pyperclip
 if not st.DEBUG_IMAGE_PATH:
     import win32gui
 from PIL import Image, ImageEnhance, ImageGrab, ImageOps
-import cv2
 
 def tesseract_init():
     # 1.インストール済みのTesseractのパスを通す
@@ -88,11 +87,6 @@ def get_event():
         img = Image.open(st.DEBUG_IMAGE_PATH)
     img = crop_event_title_image(img)
     img = enhance_image(img)
-
-    
-    cv2.imshow('pie',np.asarray(img))
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
     result = OCR(tesseract, img)
 
