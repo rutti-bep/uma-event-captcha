@@ -43,7 +43,7 @@ def crop_event_title_image(img):
 
     return img.crop((left,top,right,bottom))
 
-def crop_event_choices_img(img):
+def crop_choices_area(img):
     width,height = img.size
 
     left = width*0.03
@@ -70,8 +70,8 @@ def OCR(tesseract, img):
     return tesseract.image_to_string(img, lang="jpn", builder=builder)
 
 
-def count_event_display(img):
-    choices_img = crop_event_choices_img(img)
+def crop_choices_images(img):
+    choices_img = crop_choices_area(img)
     formated_choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(formated_choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
@@ -106,7 +106,7 @@ def count_event_display(img):
     cv2.imshow('debug',cv2.cvtColor(formated_choices_img, cv2.COLOR_RGB2BGR))
     cv2.waitKey(0)
     cv2.destroyAllWindows()
-    return len(loc)
+    return loc
 
 
 def get_event():
@@ -116,15 +116,15 @@ def get_event():
     if not st.DEBUG_IMAGE_PATH:
         while(1):
             base_img = get_window_image()
-            ans = count_event_display(base_img)
-            if ans==0:
+            ans = crop_choices_images(base_img)
+            if len(ans)==0:
                 time.sleep(1);
                 continue
             else:
                 break
     else:
         base_img = Image.open(st.DEBUG_IMAGE_PATH)
-        ans = count_event_display(base_img)
+        ans = crop_choices_images(base_img)
 
     img = crop_event_title_image(base_img)
     img = enhance_image(img)
