@@ -72,11 +72,14 @@ def OCR(tesseract, img):
 
 def count_event_display(img):
     choices_img = crop_event_choices_img(img)
+    choices_img_area = choices_img.width*choices_img.height
     choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
     img_th = cv2.threshold(img_blur, 0, 255, cv2.THRESH_BINARY_INV+cv2.THRESH_OTSU)[1]
     contours,hierarchy = cv2.findContours(cv2.bitwise_not(img_th), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours = list(filter(lambda x: cv2.contourArea(x) >= choices_img_area*0.1, contours))
+    contours = list(filter(lambda x: cv2.contourArea(x) <= choices_img_area*0.3, contours))
 
     img = cv2.drawContours(cv2.cvtColor(np.array(choices_img, dtype=np.uint8), cv2.COLOR_RGB2BGR), contours, -1, (0,255,0), 3)
     cv2.imshow('debug',img)
