@@ -72,7 +72,6 @@ def OCR(tesseract, img):
 
 def count_event_display(img):
     choices_img = crop_event_choices_img(img)
-    choices_img_width,choices_img_height = choices_img.size
     formated_choices_img = np.array(choices_img, dtype=np.uint8)
     img_gray = cv2.cvtColor(formated_choices_img, cv2.COLOR_BGR2GRAY)
     img_blur = cv2.GaussianBlur(img_gray, (5,5), 0) 
