@@ -43,6 +43,16 @@ def crop_event_title_image(img):
 
     return img.crop((left,top,right,bottom))
 
+def crop_event_choice_image(img):
+    width,height = img.size
+
+    left = width*0.1
+    right = width*0.9
+    top = height*0.2
+    bottom = height*0.8
+
+    return img.crop((left,top,right,bottom))
+
 def crop_choices_area(img):
     width,height = img.size
 
@@ -65,8 +75,8 @@ def enhance_image(img):
 
 def enchance_choices_image(img):
     #ネガポジ反転
-    img = ImageOps.invert(img)
-    #img = ImageEnhance.Brightness(img).enhance(2)
+    #img = ImageOps.invert(img)
+    img = ImageEnhance.Brightness(img).enhance(2)
     img = ImageEnhance.Sharpness(img).enhance(1)
 
     img.save('debug.png')
@@ -118,7 +128,6 @@ def crop_choices_images(img):
     nms_result = [[],[]]
 
     for i in indexes:
-        print(i[0])
         nms_result[0].append(loc[0][i[0]]);
         nms_result[1].append(loc[1][i[0]]);
 
@@ -126,7 +135,7 @@ def crop_choices_images(img):
     choices_images = []
     for pt in zip(*nms_result[::-1]):
         cv2.rectangle(formated_choices_img, pt, (pt[0] + w, pt[1] + h), (0,0,255), 1)
-        choices_images.append(Image.fromarray(img_th[pt[1]:pt[1]+h,pt[0]:pt[0]+w]))
+        choices_images.append(choices_img.crop([pt[0],pt[1],pt[0]+w,pt[1]+h]))
 
     cv2.imshow('debug',cv2.cvtColor(formated_choices_img, cv2.COLOR_RGB2BGR))
     return choices_images
@@ -139,7 +148,7 @@ def get_event():
     if not st.DEBUG_IMAGE_PATH:
         while(1):
             base_img = get_window_image()
-            ans = crop_choices_images(base_img)
+            ans = crop_c(base_img)
             if len(ans)==0:
                 time.sleep(1);
                 continue
@@ -149,18 +158,20 @@ def get_event():
         base_img = Image.open(st.DEBUG_IMAGE_PATH)
         ans = crop_choices_images(base_img)
         for choice in ans:
-            result = OCR(tesseract, enchance_choices_image( choice))
-            print(result)
+            img = crop_event_choice_image(choice)
+            img = enchance_choices_image(img)
+            img.save("debug.png")
+            result = OCR(tesseract, img)
+            print("choices:",result)
 
     img = crop_event_title_image(base_img)
     img = enhance_image(img)
 
-    
 
     result = OCR(tesseract, img)
 
     #test code
-    print(result)
+    print("title:",result)
     pyperclip.copy(result.split(' ',1)[0])
     cv2.waitKey(0)
     cv2.destroyAllWindows()
